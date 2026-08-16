@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: food_mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: securepassword
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - app-net
+
+  backend:
+    build: ./backend
+    container_name: food_backend
+    restart: always
+    ports:
+      - "4000:4000"
+    environment:
+      - PORT=4000
+      - MONGO_URI=mongodb://root:securepassword@mongodb:27017/food-del?authSource=admin
+    depends_on:
+      - mongodb
+    networks:
+      - app-net
+
+  admin:
+    build: ./admin
+    container_name: food_admin
+    restart: always
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    networks:
+      - app-net
+
+volumes:
+  mongo_data:
+
+networks:
+  app-net:
+    driver: bridge
