@@ -3,23 +3,20 @@ pipeline {
 
     environment {
         DOCKERHUB_USER = 'tahoordocker'
-        AWS_ACCOUNT    = '654654477638.dkr.ecr.us-east-1.amazonaws.com'
-        AWS_REGION     = 'us-east-1'
         IMAGE_TAG      = "${BUILD_NUMBER}"
+        VITE_API_URL   = 'http://3.236.208.161:4000'
     }
 
     stages {
         stage('Checkout') {
-            steps {
-                checkout scm
-            }
+            steps { checkout scm }
         }
 
         stage('Build Images') {
             steps {
                 sh 'docker build -t fda-backend:$IMAGE_TAG ./backend'
-                sh 'docker build -t fda-frontend:$IMAGE_TAG ./frontend'
-                sh 'docker build -t fda-admin:$IMAGE_TAG ./admin'
+                sh 'docker build --build-arg VITE_API_URL=$VITE_API_URL -t fda-frontend:$IMAGE_TAG ./frontend'
+                sh 'docker build --build-arg VITE_API_URL=$VITE_API_URL -t fda-admin:$IMAGE_TAG ./admin'
             }
         }
 
@@ -31,10 +28,10 @@ pipeline {
                     script {
                         ['backend','frontend','admin'].each { svc ->
                             sh """
-                                docker tag fda-${svc}:$IMAGE_TAG $DOCKERHUB_USER/fda-${svc}:$IMAGE_TAG
-                                docker tag fda-${svc}:$IMAGE_TAG $DOCKERHUB_USER/fda-${svc}:latest
-                                docker push $DOCKERHUB_USER/fda-${svc}:$IMAGE_TAG
-                                docker push $DOCKERHUB_USER/fda-${svc}:latest
+                                docker tag fda-${svc}:\$IMAGE_TAG \$DOCKERHUB_USER/fda-${svc}:\$IMAGE_TAG
+                                docker tag fda-${svc}:\$IMAGE_TAG \$DOCKERHUB_USER/fda-${svc}:latest
+                                docker push \$DOCKERHUB_USER/fda-${svc}:\$IMAGE_TAG
+                                docker push \$DOCKERHUB_USER/fda-${svc}:latest
                             """
                         }
                     }
@@ -42,33 +39,35 @@ pipeline {
             }
         }
 
-        stage('Push to AWS ECR') {
+        stage('Clean Local Images') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'aws-creds',
-                    usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
-                    sh '''
-                        aws ecr get-login-password --region $AWS_REGION | \
-                        docker login --username AWS --password-stdin $AWS_ACCOUNT
-                    '''
-                    script {
-                        ['backend','frontend','admin'].each { svc ->
-                            sh """
-                                docker tag fda-${svc}:$IMAGE_TAG $AWS_ACCOUNT/fda-${svc}:$IMAGE_TAG
-                                docker tag fda-${svc}:$IMAGE_TAG $AWS_ACCOUNT/fda-${svc}:latest
-                                docker push $AWS_ACCOUNT/fda-${svc}:$IMAGE_TAG
-                                docker push $AWS_ACCOUNT/fda-${svc}:latest
-                            """
-                        }
+                script {
+                    ['backend','frontend','admin'].each { svc ->
+                        sh "docker rmi fda-${svc}:\$IMAGE_TAG || true"
                     }
+                }
+                sh 'docker image prune -f || true'
+            }
+        }
+
+        stage('Deploy with Docker Compose') {
+            steps {
+                withCredentials([
+                    string(credentialsId: 'jwt-secret',    variable: 'JWT_SECRET'),
+                    string(credentialsId: 'stripe-secret', variable: 'STRIPE_SECRET_KEY')
+                ]) {
+                    sh '''
+                        docker compose pull
+                        docker compose up -d
+                        docker compose ps
+                    '''
                 }
             }
         }
     }
 
     post {
-        always {
-            sh 'docker logout || true'
-            sh 'docker image prune -f || true'
-        }
+        always  { sh 'docker logout || true' }
+        failure { echo 'Pipeline failed - check the stage logs above.' }
     }
 }

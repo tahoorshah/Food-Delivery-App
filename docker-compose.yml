@@ -1,0 +1,51 @@
+services:
+  mongo:
+    image: mongo:7
+    container_name: fda-mongo
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    networks: [fda-net]
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    image: ${DOCKERHUB_USER}/fda-backend:${IMAGE_TAG:-latest}
+    container_name: fda-backend
+    restart: unless-stopped
+    environment:
+      - PORT=4000
+      - MONGO_URL=mongodb://mongo:27017/food-delivery
+      - JWT_SECRET=${JWT_SECRET}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+    ports: ["4000:4000"]
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks: [fda-net]
+
+  frontend:
+    image: ${DOCKERHUB_USER}/fda-frontend:${IMAGE_TAG:-latest}
+    container_name: fda-frontend
+    restart: unless-stopped
+    ports: ["3000:80"]
+    depends_on: [backend]
+    networks: [fda-net]
+
+  admin:
+    image: ${DOCKERHUB_USER}/fda-admin:${IMAGE_TAG:-latest}
+    container_name: fda-admin
+    restart: unless-stopped
+    ports: ["8081:80"]
+    depends_on: [backend]
+    networks: [fda-net]
+
+volumes:
+  mongo-data:
+
+networks:
+  fda-net:
+    driver: bridge
