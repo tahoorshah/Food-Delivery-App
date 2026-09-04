@@ -1,0 +1,47 @@
+namespace: food-delivery
+
+backend:
+  name: backend
+  image: tahoordocker/fda-backend:latest
+  replicas: 2
+  containerPort: 4000
+  service:
+    port: 4000
+  resources:
+    requests: { cpu: "100m", memory: "128Mi" }
+    limits:   { cpu: "500m", memory: "512Mi" }
+
+frontend:
+  name: frontend
+  image: tahoordocker/fda-frontend:latest
+  replicas: 1
+  containerPort: 80
+  service:
+    port: 80
+  resources:
+    requests: { cpu: "50m", memory: "64Mi" }
+    limits:   { cpu: "200m", memory: "256Mi" }
+
+mongo:
+  name: mongo
+  image: mongo:7
+  port: 27017
+  storage: 1Gi
+
+config:
+  PORT: "4000"
+  MONGO_URL: "mongodb://mongo-0.mongo:27017/food-delivery"
+
+secret:
+  JWT_SECRET: "4185f9e359e283f603c7ef94e6c37865b5e418ad6c01ecca1fd94fa591bff6b2"
+  STRIPE_SECRET_KEY: "sk_test_placeholder"
+  SALT: "10"
+
+hpa:
+  minReplicas: 2
+  maxReplicas: 5
+  cpuUtilization: 50
+
+ingress:
+  enabled: true
+  className: nginx
