@@ -4,11 +4,11 @@ helm:
     value: tahoordocker/fda-backend
     forcestring: true
   - name: backend.tag
-    value: "6"
+    value: "1.0"
     forcestring: true
   - name: frontend.repository
     value: tahoordocker/fda-frontend
     forcestring: true
   - name: frontend.tag
-    value: "6"
+    value: "1.0"
     forcestring: true
