@@ -2,7 +2,8 @@ namespace: food-delivery
 
 backend:
   name: backend
-  image: tahoordocker/fda-backend:latest
+  repository: tahoordocker/fda-backend
+  tag: "1.0"
   replicas: 2
   containerPort: 4000
   service:
@@ -13,7 +14,8 @@ backend:
 
 frontend:
   name: frontend
-  image: tahoordocker/fda-frontend:latest
+  repository: tahoordocker/fda-frontend
+  tag: "1.0"
   replicas: 1
   containerPort: 80
   service:

@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: {{ .Values.backend.name }}
-          image: {{ .Values.backend.image }}
+          image: "{{ .Values.backend.repository }}:{{ .Values.backend.tag }}"
           ports:
             - containerPort: {{ .Values.backend.containerPort }}
           env:
