@@ -7,3 +7,11 @@ terraform/*.tfstate.*
 terraform/*.tfvars
 terraform/.terraform.lock.hcl
 terraform/tfplan
+
+eks-terraform/.terraform/
+eks-terraform/*.tfstate*
+eks-terraform/.terraform.lock.hcl
+code.deb
+kubectl
+eksctl_Linux_amd64.tar.gz
+eks-terraform/iam_policy.json
