@@ -22,3 +22,11 @@ rds-terraform/*.tfstate
 rds-terraform/*.tfstate.*
 rds-terraform/*.tfvars
 rds-terraform/.terraform.lock.hcl
+
+# CDN terraform
+cdn-site/.terraform/
+cdn-site/*.tfstate
+cdn-site/*.tfstate.*
+cdn-site/dc.json
+cdn-site/dist.json
+cdn-site/policy.json
