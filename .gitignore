@@ -15,3 +15,10 @@ code.deb
 kubectl
 eksctl_Linux_amd64.tar.gz
 eks-terraform/iam_policy.json
+
+# RDS terraform
+rds-terraform/.terraform/
+rds-terraform/*.tfstate
+rds-terraform/*.tfstate.*
+rds-terraform/*.tfvars
+rds-terraform/.terraform.lock.hcl
